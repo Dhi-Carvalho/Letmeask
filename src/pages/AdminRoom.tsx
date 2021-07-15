@@ -1,7 +1,9 @@
-import { useHistory, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import logoImg from "../assets/images/logo.svg";
 import deleteImg from "../assets/images/delete.svg";
+import checkImg from "../assets/images/check.svg";
+import answerImg from "../assets/images/answer.svg";
 
 import { Button } from "../components/Button";
 import { Question } from "../components/Question";
@@ -11,6 +13,7 @@ import { useRoom } from "../hooks/useRoom";
 import { database } from "../services/firebase";
 
 import "../styles/room.scss";
+import Modal, { useModal } from "../components/Modal";
 
 type RoomParams = {
   id: string;
@@ -18,18 +21,10 @@ type RoomParams = {
 
 export function AdminRoom() {
   //const { user } = useAuth();
-  const history = useHistory();
   const params = useParams<RoomParams>();
   const roomId = params.id;
   const { title, questions } = useRoom(roomId);
-
-  async function handleEndRoom() {
-    await database.ref(`rooms/${roomId}`).update({
-      endedAt: new Date(),
-    });
-
-    history.push("/");
-  }
+  const { isShowing, toggle } = useModal();
 
   async function handleDeleteQuestion(questionId: string) {
     if (window.confirm("Tem certeza que você deseja excluir esta pergunta?")) {
@@ -37,16 +32,27 @@ export function AdminRoom() {
     }
   }
 
+  async function handleCheckQuestionAsAnswered(questionId: string) {
+    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({});
+  }
+
+  async function handleHighlightQuestion(questionId: string) {}
+
   return (
     <div id="page-room">
       <header>
         <div className="content">
-          <img src={logoImg} alt="Letmeask" />
+          <a href="/">
+            <img src={logoImg} alt="Letmeask" />
+          </a>
           <div>
             <RoomCode code={roomId} />
-            <Button isOutlined onClick={handleEndRoom}>
-              Encerrar sala
-            </Button>
+            <div>
+              <Button isOutlined onClick={toggle}>
+                Encerrar sala
+              </Button>
+              <Modal {...{ isShowing, toggle }} />
+            </div>
           </div>
         </div>
       </header>
@@ -67,10 +73,24 @@ export function AdminRoom() {
               >
                 <button
                   type="button"
-                  onClick={() => handleDeleteQuestion(question.id)}
+                  onClick={() => handleCheckQuestionAsAnswered(question.id)}
                 >
-                  <img src={deleteImg} alt="Remover pergunta" />
+                  <img src={checkImg} alt="Remover pergunta" />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleHighlightQuestion(question.id)}
+                >
+                  <img src={answerImg} alt="Remover pergunta" />
+                </button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteQuestion(question.id)}
+                  >
+                    <img src={deleteImg} alt="Remover pergunta" />
+                  </button>
+                </div>
               </Question>
             );
           })}
