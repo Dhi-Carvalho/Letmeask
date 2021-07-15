@@ -38,26 +38,34 @@
   align-items: center;
   justify-content: center;
 
-  img {
-    width: 48px;
-    height: 48px;
-    margin: 64px auto 24px;
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 48px;
+      height: 48px;
+      margin: 64px auto 24px;
+      color: #e73f5d;
+    }
+
+    h1 {
+      font: 700 24px "Poppins", sans-serif;
+      line-height: 34px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      font: 400 16px "Roboto", sans-serif;
+      line-height: 26px;
+      color: #737380;
+      margin-bottom: 40px;
+    }
   }
 
-  h1 {
-    font: 700 24px "Poppins", sans-serif;
-    line-height: 34px;
-    margin-bottom: 12px;
-  }
-
-  p {
-    font: 400 16px "Roboto", sans-serif;
-    line-height: 26px;
-    color: #737380;
-    margin-bottom: 40px;
-  }
-
-  .buttons {
+  .modal-footer {
     display: flex;
     gap: 8px;
     margin-bottom: 64px;
@@ -73,6 +81,7 @@
       background: #dbdcdd;
       font: 500 16px "Roboto", sans-serif;
       color: #737380;
+      cursor: pointer;
 
       &.delete {
         background: #e73f5d;
