@@ -1,19 +1,20 @@
-import { useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 
 import logoImg from "../assets/images/logo.svg";
 import deleteImg from "../assets/images/delete.svg";
 import checkImg from "../assets/images/check.svg";
 import answerImg from "../assets/images/answer.svg";
+import closeImg from "../assets/images/danger.svg";
 
 import { Button } from "../components/Button";
 import { Question } from "../components/Question";
 import { RoomCode } from "../components/RoomCode";
+import Modal, { ModalBody, ModalFooter, useModal } from "../components/Modal";
 //import { useAuth } from "../hooks/useAuth";
 import { useRoom } from "../hooks/useRoom";
 import { database } from "../services/firebase";
 
 import "../styles/room.scss";
-import Modal, { useModal } from "../components/Modal";
 
 type RoomParams = {
   id: string;
@@ -21,10 +22,19 @@ type RoomParams = {
 
 export function AdminRoom() {
   //const { user } = useAuth();
+  const history = useHistory();
   const params = useParams<RoomParams>();
   const roomId = params.id;
   const { title, questions } = useRoom(roomId);
   const { isShowing, toggle } = useModal();
+
+  async function handleEndRoom() {
+    await database.ref(`rooms/${roomId}`).update({
+      endedAt: new Date(),
+    });
+
+    history.push("/");
+  }
 
   async function handleDeleteQuestion(questionId: string) {
     if (window.confirm("Tem certeza que você deseja excluir esta pergunta?")) {
@@ -33,10 +43,16 @@ export function AdminRoom() {
   }
 
   async function handleCheckQuestionAsAnswered(questionId: string) {
-    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({});
+    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
+      isAnswered: true,
+    });
   }
 
-  async function handleHighlightQuestion(questionId: string) {}
+  async function handleHighlightQuestion(questionId: string) {
+    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
+      isHighlighted: true,
+    });
+  }
 
   return (
     <div id="page-room">
@@ -51,7 +67,21 @@ export function AdminRoom() {
               <Button isOutlined onClick={toggle}>
                 Encerrar sala
               </Button>
-              <Modal {...{ isShowing, toggle }} />
+              <Modal {...{ isShowing, toggle }}>
+                <ModalBody>
+                  <img src={closeImg} alt="Encerrar sala" />
+                  <h1>Encerrar sala</h1>
+                  <p>Tem certeza que você deseja encerrar esta sala?</p>
+                </ModalBody>
+                <ModalFooter {...{ toggle }}>
+                  <button className="cancel" onClick={toggle}>
+                    Cancelar
+                  </button>
+                  <button className="delete" onClick={handleEndRoom}>
+                    Sim, encerrar
+                  </button>
+                </ModalFooter>
+              </Modal>
             </div>
           </div>
         </div>
@@ -70,27 +100,31 @@ export function AdminRoom() {
                 key={question.id}
                 content={question.content}
                 author={question.author}
+                isAnswered={question.isAnswered}
+                isHighlighted={question.isHighlighted}
               >
+                {!question.isAnswered && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleCheckQuestionAsAnswered(question.id)}
+                    >
+                      <img src={checkImg} alt="Remover pergunta" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleHighlightQuestion(question.id)}
+                    >
+                      <img src={answerImg} alt="Remover pergunta" />
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
-                  onClick={() => handleCheckQuestionAsAnswered(question.id)}
+                  onClick={() => handleDeleteQuestion(question.id)}
                 >
-                  <img src={checkImg} alt="Remover pergunta" />
+                  <img src={deleteImg} alt="Remover pergunta" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleHighlightQuestion(question.id)}
-                >
-                  <img src={answerImg} alt="Remover pergunta" />
-                </button>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteQuestion(question.id)}
-                  >
-                    <img src={deleteImg} alt="Remover pergunta" />
-                  </button>
-                </div>
               </Question>
             );
           })}
